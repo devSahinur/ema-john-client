@@ -20,12 +20,25 @@ export const handleGoogleSignIn = () => {
         photo: photoURL,
         success: true
       };
+      setUserToken();
+
       return signedInUser;
     })
     .catch(err => {
       console.log(err);
       console.log(err.message);
     })
+  }
+
+  // login info saved session Storage
+
+  const setUserToken = () => {
+    firebase.auth().currentUser.getIdToken(/* forceRefresh */ true)
+    .then(function(idToken) {
+      sessionStorage.setItem('token', idToken);
+    }).catch(function(error) {
+      // Handle error
+    });
   }
 
   export const handleFbSignIn = () => {

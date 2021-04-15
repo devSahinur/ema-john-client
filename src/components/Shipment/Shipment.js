@@ -1,36 +1,51 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import './Shipment.css';
 import { useContext } from 'react';
 import { UserContext } from '../../App';
 import { getDatabaseCart, processOrder } from '../../utilities/databaseManager';
+import ProcessPayment from '../ProcessPayment/ProcessPayment';
 
 const Shipment = () => {
   const { register, handleSubmit, watch, errors } = useForm();
   const [loggedInUser, setLoggedInUser] = useContext(UserContext);
+  const [shippingData, setSippingData] = useState(null)
   const onSubmit = data => {
-      const savedCart = getDatabaseCart();
-      const orderDetails ={...loggedInUser, products: savedCart, shipment: data, orderTime: new Date()};
-      fetch('https://limitless-harbor-60034.herokuapp.com/addOrder',{
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(orderDetails)
-      })
-      .then(res => res.json())
-      .then(data =>{
-        if(data){
-          processOrder();
-          alert('Order added successfully');
-        }
-      })
+    setSippingData(data);
     };
+
+  const handlePaymentSuccess = (paymentId) => {
+    const savedCart = getDatabaseCart();
+    const orderDetails ={
+      ...loggedInUser,
+      products: savedCart,
+      shipment: shippingData,
+      paymentId,
+      orderTime: new Date()
+    };
+    console.log(orderDetails)
+    fetch('https://limitless-harbor-60034.herokuapp.com/addOrder',{
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(orderDetails)
+    })
+    .then(res => res.json())
+    .then(data =>{
+      if(data){
+        processOrder();
+        alert('Order added successfully');
+      }
+    })
+  }
 
   console.log(watch("example")); // watch input value by passing the name of it
 
   return (
-    <form className="ship-form" onSubmit={handleSubmit(onSubmit)}>
+    <div className="row">
+      <div style={{display: shippingData ? 'none' : 'block'}}  className="cal-md-6">
+      <form className="ship-form" onSubmit={handleSubmit(onSubmit)}>
       <input name="name" defaultValue={loggedInUser.name} ref={register({ required: true })} placeholder="Your Name" />
       {errors.name && <span className="error">Name is required</span>}
      
@@ -45,6 +60,12 @@ const Shipment = () => {
       
       <input type="submit" />
     </form>
+      </div>
+      <div style={{display: shippingData ? 'block' : 'none'}} className="cal-md-6">
+        <h1>Please Pay for me</h1>
+        <ProcessPayment handlePayment={handlePaymentSuccess}></ProcessPayment>
+      </div>
+    </div>
   );
 };
 

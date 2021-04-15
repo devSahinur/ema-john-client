@@ -10,17 +10,18 @@ const Shop = () => {
     // const first10 = fakeData.slice(0,10);
     const [products, setProducts] = useState([]);
     const [cart, setCart] = useState([]);
+    const [search, setSearch] = useState('');
 
     useEffect(() => {
-        fetch('https://limitless-harbor-60034.herokuapp.com/products')
+        fetch('https://limitless-harbor-60034.herokuapp.com/products?search='+ search)
         .then(res => res.json())
         .then(data => setProducts(data))
-    },[])
+    },[search])
     
     useEffect(()=>{
         const savedCart = getDatabaseCart();
         const productKeys = Object.keys(savedCart);
-        fetch('https://limitless-harbor-60034.herokuapp.com//productsByKeys',{
+        fetch('https://limitless-harbor-60034.herokuapp.com/productsByKeys',{
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -30,6 +31,10 @@ const Shop = () => {
         .then(res => res.json())
         .then(data => setCart(data))
     }, [products])
+
+    const handleSearch = event => {
+        setSearch(event.target.value);
+    }
 
     const handleAddProduct = (product) =>{
         const toBeAddedKey = product.key;
@@ -48,11 +53,12 @@ const Shop = () => {
         }
         setCart(newCart);
         addToDatabaseCart(product.key, count);
-    }
+    };
 
     return (
         <div className="twin-container">
             <div className="product-container">
+                <input type="text" onBlur={handleSearch} className="product-search" placeholder="Search Product"/>
                 {
                     products.map(pd => <Product 
                         key={pd.key}
